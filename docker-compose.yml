@@ -1,183 +1,38 @@
 version: '2'
 services:
-
-  portainer:
-    container_name: portainer
-    image: portainer/portainer-ce
+  zm_db:
+    container_name: zm_db
     restart: unless-stopped
-    network_mode: host
-#    ports:
-#      - 9000:9000
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./volumes/portainer/data:/data
-
-  sonarr:
-    image: linuxserver/sonarr
-    container_name: sonarr
-    network_mode: host
+    image: mysql/mysql-server:5.7
     environment:
-      - PUID=1000
-      - PGID=1000
       - TZ=Europe/Athens
-      - UMASK_SET=022 #optional
+      - MYSQL_USER=zmuser
+      - MYSQL_PASSWORD=${MYSQLZMPASS}
+      - MYSQL_DATABASE=zm
+      - MYSQL_ROOT_PASSWORD=${MYSQLROOTPASS}
+      - MYSQL_ROOT_HOST=%
     volumes:
-      - ./volumes/sonarr/data:/config
-      - /media/pi/intenso_external/0_media/tv:/tv
-#      - /media/pi/intenso_external/torrents_downloads:/torrents_downloads
-      - /media/pi/patriot_ssd/torrents_downloads:/torrents_downloads
-#    ports:
-#      - 8989:8989
-    restart: unless-stopped
+    - /home/media/data/zoneminder/mysql_volume:/var/lib/mysql      
+    network_mode: zoneminder_network
 
-  radarr:
-    image: linuxserver/radarr
-    container_name: radarr
-    network_mode: host
+  zoneminder:
+    container_name: zoneminder
+    restart: unless-stopped
+    shm_size: 6096m
     environment:
-      - PUID=0
-      - PGID=0
       - TZ=Europe/Athens
-      - UMASK=022 #optional
+      - ZM_DB_HOST=zm_db
+    network_mode: zoneminder_network
+    ports:
+      - 9080:80/tcp
+      - 8443:443/tcp
+      - 9001:9000/tcp      
+    image: quantumobject/docker-zoneminder
     volumes:
-      - ./volumes/radarr/config:/config
-      - /media/pi/intenso_external/0_media/movies:/movies
-      - /media/pi/intenso_external/0_media/classics:/classics
-      - /media/pi/intenso_external/0_media/kids:/kids
-#      - /media/pi/intenso_external/torrents_downloads:/torrents_downloads
-      - /media/pi/patriot_ssd/torrents_downloads:/torrents_downloads
-#    ports:
-#      - 7878:7878
-    restart: unless-stopped
+      - /mnt/beta/cameras:/zoneminder_cams
+      - /home/media/data/zoneminder:/config:rw
+      - /home/media/data/zoneminder/cache:/var/cache/zoneminder:rw      
 
-  bazarr:
-    image: linuxserver/bazarr
-    container_name: bazarr
-    network_mode: host
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Athens
-      - UMASK_SET=022 #optional
-    volumes:
-      - ./volumes/bazarr/config:/config
-      - /media/pi/intenso_external/0_media/tv:/tv
-      - /media/pi/intenso_external/0_media/movies:/movies
-#    ports:
-#      - 6767:6767
-    restart: unless-stopped
-
-#  jackett:
-#    image: linuxserver/jackett
-#    container_name: jackett
-#    network_mode: host
-#    environment:
-#      - PUID=1000
-#      - PGID=1000
-#      - TZ=Europe/Athens
-#      - AUTO_UPDATE=true #optional
-#      # - RUN_OPTS=<run options here> #optional
-#    volumes:
-#      - ./volumes/jackett/config:/config
-#      - /media/pi/intenso_external/torrents_downloads:/torrents_downloads
-##    ports:
-#      - 9117:9117
-#    restart: unless-stopped
-
-  prowlarr:
-    image: ghcr.io/linuxserver/prowlarr:develop
-    container_name: prowlarr
-    network_mode: host
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Athens
-    volumes:
-      - ./volumes/prowlarr/data:/config
-#    ports:
-#      - 9696:9696
-    restart: unless-stopped
-
-  plex:
-    image: ghcr.io/linuxserver/plex:bionic
-    container_name: plex
-    network_mode: host
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - VERSION=docker
-      - TZ=Europe/Athens      
-      - UMASK_SET=022 #optional
-      # - PLEX_CLAIM= #optional
-    volumes:
-      - ./volumes/plex/library:/config
-      - /media/pi/intenso_external/0_media/tv:/tv
-      - /media/pi/intenso_external/0_media/movies:/movies
-      - /media/pi/intenso_external/0_media/kids:/kids
-      - /media/pi/intenso_external/0_media/classics:/classics
-    restart: unless-stopped
-
-#   transmission:
-#     image: linuxserver/transmission
-#     container_name: transmission
-#     network_mode: host
-#     environment:
-#       - PUID=1000
-#       - PGID=1000
-#       - TZ=Europe/Athens
-#       - TRANSMISSION_WEB_HOME=/combustion-release/ #optional
-#       - USER=admin #optional
-#       - PASS= #optional
-#     volumes:
-#       - ./volumes/transmission/config:/config
-#       - /media/pi/intenso_external/torrents_downloads:/torrents_downloads
-#       - ./downloads/torrent_files:/torrent_files
-#       - ./downloads/TransmissionWatchFolder:/watch
-# #    ports:
-# #      - 9091:9091
-# #      - 51413:51413
-# #      - 51413:51413/udp
-
-  # deluge:
-  #   image: linuxserver/deluge
-  #   container_name: deluge
-  #   network_mode: host
-  #   environment:
-  #     - PUID=1000
-  #     - PGID=1000
-  #     - TZ=Europe/Athens
-  #     - UMASK=022 #optional
-  #     - DELUGE_LOGLEVEL=error #optional
-  #   volumes:
-  #     - ./volumes/deluge/config:/config
-  #     - /media/pi/intenso_external/torrents_downloads:/torrents_downloads
-  #     - ./downloads/torrent_files:/torrent_files
-  #   # ports:
-  #   #   - 8112:8112
-  #   #   - 58846:58846
-  #   #   - 58946:58946
-
-  qbittorrent:
-    image: linuxserver/qbittorrent
-    container_name: qbittorrent
-    network_mode: host
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Athens      
-      - UMASK_SET=022
-      - WEBUI_PORT=15080
-    volumes:
-      - ./volumes/qbittorrent/config:/config
-#      - /media/pi/intenso_external/torrents_downloads:/torrents_downloads
-      - /media/pi/patriot_ssd/torrents_downloads:/torrents_downloads
-#      - /media/pi/intenso_external/just_for_seeding:/just_for_seeding
-#      - /media/pi/patriot_ssd/just_for_seeding:/just_for_seeding
-      - ./downloads/torrent_files:/torrent_files      
-    # ports:
-    #   - 6881:6881
-    #   - 6881:6881/udp
-    #   - 15080:15080
-    #   - 1080:1080
-    restart: unless-stopped
-
+volumes:
+  mysql_volume:
+  zoneminder:
