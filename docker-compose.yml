@@ -1,38 +1,21 @@
-version: '2'
+version: '3'
 services:
-  zm_db:
-    container_name: zm_db
-    restart: unless-stopped
-    image: mysql/mysql-server:5.7
-    environment:
-      - TZ=Europe/Athens
-      - MYSQL_USER=zmuser
-      - MYSQL_PASSWORD=${MYSQLZMPASS}
-      - MYSQL_DATABASE=zm
-      - MYSQL_ROOT_PASSWORD=${MYSQLROOTPASS}
-      - MYSQL_ROOT_HOST=%
-    volumes:
-    - /home/media/data/zoneminder/mysql_volume:/var/lib/mysql      
-    network_mode: zoneminder_network
-
-  zoneminder:
-    container_name: zoneminder
-    restart: unless-stopped
-    shm_size: 6096m
-    environment:
-      - TZ=Europe/Athens
-      - ZM_DB_HOST=zm_db
-    network_mode: zoneminder_network
-    ports:
-      - 9080:80/tcp
-      - 8443:443/tcp
-      - 9001:9000/tcp      
-    image: quantumobject/docker-zoneminder
-    volumes:
-      - /mnt/beta/cameras:/zoneminder_cams
-      - /home/media/data/zoneminder:/config:rw
-      - /home/media/data/zoneminder/cache:/var/cache/zoneminder:rw      
-
-volumes:
-  mysql_volume:
-  zoneminder:
+    zoneminder:
+        container_name: zoneminder
+        network_mode: bridge
+        privileged: true
+        ports:
+            - '8080:80/tcp'
+            - '8443:443/tcp'
+            - '9001:9000/tcp'
+        environment:
+            - TZ=Europe/Athens
+            - SHMEM=50%
+            - SSL_EVENTS=1
+            - PUID=1000
+            - PGID=1000
+        volumes:
+            - '/media/pi/patriot_ssd/zoneminder_cameras:/zoneminder_cams'
+            - '/media/pi/patriot_ssd/zoneminder_data:/config:rw'
+            - '/media/pi/patriot_ssd/zoneminder_data/cache:/var/cache/zoneminder:rw'
+        image: sgarzarella/zoneminder-armhf
