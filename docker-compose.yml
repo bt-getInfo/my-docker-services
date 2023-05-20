@@ -23,8 +23,9 @@ services:
       - UMASK_SET=022 #optional
     volumes:
       - ./volumes/sonarr/data:/config
+      - /media/pi/intenso_external/0_media:/media_root
       - /media/pi/intenso_external/0_media/tv:/tv
-#      - /media/pi/intenso_external/torrents_downloads:/torrents_downloads
+      - /media/pi/intenso_external/0_media/kids:/kids
       - /media/pi/patriot_ssd/torrents_downloads:/torrents_downloads
 #    ports:
 #      - 8989:8989
@@ -63,6 +64,8 @@ services:
       - ./volumes/bazarr/config:/config
       - /media/pi/intenso_external/0_media/tv:/tv
       - /media/pi/intenso_external/0_media/movies:/movies
+      - /media/pi/intenso_external/0_media/kids:/kids
+      - /media/pi/intenso_external/0_media/classics:/classics
 #    ports:
 #      - 6767:6767
     restart: unless-stopped
@@ -180,4 +183,3 @@ services:
     #   - 15080:15080
     #   - 1080:1080
     restart: unless-stopped
-
